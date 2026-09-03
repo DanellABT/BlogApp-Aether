@@ -19,7 +19,6 @@ module.exports.createPost = async (req, res) => {
 module.exports.getAllPosts = async (req, res) => {
     try {
         const posts = await Post.find({})
-            const posts = await Post.find({})
             .populate('author', 'username profilePic')
             .populate('comments.author', 'username profilePic')
             .sort({ creationDate: -1 });
