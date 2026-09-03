@@ -99,3 +99,29 @@ module.exports.addComment = async (req, res) => {
         res.status(500).send({ error: "Failed to add comment" });
     }
 };
+
+// Toggle Like
+module.exports.toggleLike = async (req, res) => {
+    try {
+        const post = await Post.findById(req.params.id);
+        if (post.likes.includes(req.user.id)) {
+            post.likes.pull(req.user.id); // Unlike
+        } else {
+            post.likes.push(req.user.id); // Like
+        }
+        await post.save();
+        res.status(200).send({ message: "Like updated", likes: post.likes });
+    } catch (err) { res.status(500).send({ error: "Like failed" }); }
+};
+
+// Get 'Following' Feed
+module.exports.getFollowingPosts = async (req, res) => {
+    try {
+        const User = require('../models/User');
+        const currentUser = await User.findById(req.user.id);
+        const posts = await Post.find({ author: { $in: currentUser.following } })
+            .populate('author', 'username')
+            .sort({ creationDate: -1 });
+        res.status(200).send(posts);
+    } catch (err) { res.status(500).send({ error: "Failed to load feed" }); }
+};

@@ -5,6 +5,7 @@ const postSchema = new mongoose.Schema({
     content: { type: String, required: [true, 'Content is required'] },
     author: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
     creationDate: { type: Date, default: Date.now },
+    likes: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }],
     comments: [
         {
             text: { type: String, required: true },

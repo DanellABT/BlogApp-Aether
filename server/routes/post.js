@@ -11,5 +11,7 @@ router.post('/', verify, postController.createPost);
 router.put('/:id', verify, postController.updatePost);
 router.delete('/:id', verify, postController.deletePost);
 router.post('/:id/comments', verify, postController.addComment);
+router.post('/:id/like', verify, postController.toggleLike);
+router.get('/feed/following', verify, postController.getFollowingPosts);
 
 module.exports = router;

@@ -29,3 +29,48 @@ module.exports.login = async (req, res) => {
         res.status(500).send({ error: "Login failed", details: err.message });
     }
 };
+
+// Toggle Follow User
+module.exports.toggleFollow = async (req, res) => {
+    try {
+        const targetUser = await User.findById(req.params.id);
+        const currentUser = await User.findById(req.user.id);
+        
+        if (currentUser.following.includes(targetUser._id)) {
+            // Unfollow
+            currentUser.following.pull(targetUser._id);
+            targetUser.followers.pull(currentUser._id);
+        } else {
+            // Follow
+            currentUser.following.push(targetUser._id);
+            targetUser.followers.push(currentUser._id);
+        }
+        await currentUser.save();
+        await targetUser.save();
+        res.status(200).send({ message: "Follow status updated", following: currentUser.following });
+    } catch (err) { res.status(500).send({ error: "Action failed" }); }
+};
+
+module.exports.getSuggestions = async (req, res) => {
+    try {
+        const currentUser = await User.findById(req.user.id);
+        // Find 3 users that the current user is NOT already following
+        const users = await User.find({
+            _id: { $nin: [...currentUser.following, currentUser._id] }
+        }).limit(3).select('username');
+        res.status(200).send(users);
+    } catch (err) { res.status(500).send({ error: "Failed to load suggestions" }); }
+};
+
+module.exports.getProfile = async (req, res) => {
+    try {
+        const profileUser = await User.findOne({ username: req.params.username }).select('-password');
+        if (!profileUser) return res.status(404).send({ message: "User not found" });
+        
+        const Post = require('../models/Post');
+        const posts = await Post.find({ author: profileUser._id }).populate('author', 'username').sort({ creationDate: -1 });
+        const replies = await Post.find({ "comments.author": profileUser._id }).populate('author', 'username').sort({ creationDate: -1 });
+        
+        res.status(200).send({ user: profileUser, posts, replies });
+    } catch (err) { res.status(500).send({ error: "Failed to load profile" }); }
+};
