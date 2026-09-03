@@ -64,13 +64,32 @@ module.exports.getSuggestions = async (req, res) => {
 
 module.exports.getProfile = async (req, res) => {
     try {
-        const profileUser = await User.findOne({ username: req.params.username }).select('-password');
+        const profileUser = await User.findOne({ username: req.params.username })
+            .select('-password')
+            .populate('followers', 'username')
+            .populate('following', 'username');
+            
         if (!profileUser) return res.status(404).send({ message: "User not found" });
         
-        const Post = require('../models/Post');
+        const Post = require('../models/Post'); 
         const posts = await Post.find({ author: profileUser._id }).populate('author', 'username').sort({ creationDate: -1 });
         const replies = await Post.find({ "comments.author": profileUser._id }).populate('author', 'username').sort({ creationDate: -1 });
         
         res.status(200).send({ user: profileUser, posts, replies });
     } catch (err) { res.status(500).send({ error: "Failed to load profile" }); }
+};
+
+module.exports.updateProfile = async (req, res) => {
+    try {
+        const user = await User.findById(req.user.id);
+        if (!user) return res.status(404).send({ message: "User not found" });
+
+        user.username = req.body.username || user.username;
+        user.email = req.body.email || user.email;
+        await user.save();
+
+        res.status(200).send({ message: "Profile updated successfully", user });
+    } catch (err) {
+        res.status(500).send({ error: "Failed to update profile. Username/Email might be taken." });
+    }
 };

@@ -9,5 +9,6 @@ router.post('/login', userController.login);
 router.post('/:id/follow', verify, userController.toggleFollow);
 router.get('/suggestions', verify, userController.getSuggestions);
 router.get('/profile/:username', verify, userController.getProfile);
+router.put('/profile', verify, userController.updateProfile);
 
 module.exports = router;
