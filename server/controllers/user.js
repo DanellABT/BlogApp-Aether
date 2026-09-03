@@ -85,11 +85,15 @@ module.exports.updateProfile = async (req, res) => {
         if (!user) return res.status(404).send({ message: "User not found" });
 
         user.username = req.body.username || user.username;
-        user.email = req.body.email || user.email;
+
+        if (req.body.profilePic !== undefined) {
+            user.profilePic = req.body.profilePic;
+        }
+
         await user.save();
 
         res.status(200).send({ message: "Profile updated successfully", user });
     } catch (err) {
-        res.status(500).send({ error: "Failed to update profile. Username/Email might be taken." });
+        res.status(500).send({ error: "Failed to update profile. Username might be taken." });
     }
 };
