@@ -19,9 +19,10 @@ module.exports.createPost = async (req, res) => {
 module.exports.getAllPosts = async (req, res) => {
     try {
         const posts = await Post.find({})
-            .populate('author', 'username')
-            .populate('comments.author', 'username')
-            .sort({ creationDate: -1 }); // Newest first like
+            const posts = await Post.find({})
+            .populate('author', 'username profilePic')
+            .populate('comments.author', 'username profilePic')
+            .sort({ creationDate: -1 });
         res.status(200).send(posts);
     } catch (err) {
         res.status(500).send({ error: "Failed to fetch posts" });
@@ -32,8 +33,8 @@ module.exports.getAllPosts = async (req, res) => {
 module.exports.getSinglePost = async (req, res) => {
     try {
         const post = await Post.findById(req.params.id)
-            .populate('author', 'username')
-            .populate('comments.author', 'username');
+            .populate('author', 'username profilePic')
+            .populate('comments.author', 'username profilePic');
         if (!post) return res.status(404).send({ message: "Post not found" });
         res.status(200).send(post);
     } catch (err) {
@@ -91,7 +92,7 @@ module.exports.addComment = async (req, res) => {
             req.params.id,
             { $push: { comments: newComment } },
             { new: true }
-        ).populate('comments.author', 'username');
+        ).populate('comments.author', 'username profilePic');
 
         if (!updatedPost) return res.status(404).send({ message: "Post not found" });
         res.status(200).send({ message: "Comment added", post: updatedPost });
@@ -120,7 +121,7 @@ module.exports.getFollowingPosts = async (req, res) => {
         const User = require('../models/User');
         const currentUser = await User.findById(req.user.id);
         const posts = await Post.find({ author: { $in: currentUser.following } })
-            .populate('author', 'username')
+            .populate('author', 'username profilePic')
             .sort({ creationDate: -1 });
         res.status(200).send(posts);
     } catch (err) { res.status(500).send({ error: "Failed to load feed" }); }
